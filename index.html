@@ -8,50 +8,37 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    <div id="uiContainer">
-      <div id="ui">
-        <div id="x"></div>
-        <div id="y"></div>
-        <div id="angle"></div>
-        <div id="scaleX"></div>
-        <div id="scaleY"></div>
-      </div>
+  <canvas id="canvas"></canvas>
+  <div id="uiContainer">
+    <div id="ui">
+      <div id="x"></div>
+      <div id="y"></div>
+      <div id="angle"></div>
+      <div id="scaleX"></div>
+      <div id="scaleY"></div>
     </div>
-    <!-- vertex shader -->
-    <script  id="vertex-shader-2d" type="x-shader/x-vertex">
-    attribute vec2 a_position;
-    
-    uniform vec2 u_resolution;
-    uniform mat3 u_matrix;
-    
-    void main() {
-      // Multiply the position by the matrix.
-      vec2 position = (u_matrix * vec3(a_position, 1)).xy;
-    
-      // convert the position from pixels to 0.0 to 1.0
-      vec2 zeroToOne = position / u_resolution;
-    
-      // convert from 0->1 to 0->2
-      vec2 zeroToTwo = zeroToOne * 2.0;
-    
-      // convert from 0->2 to -1->+1 (clipspace)
-      vec2 clipSpace = zeroToTwo - 1.0;
-    
-      gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
-    }
-</script>
-    
-    <script id="shader-de-vertex-2d" type="x-shader/x-vertex">
-        attribute vec2 a_position;
-         
-        uniform mat3 u_matrice;
-         
-        void main() {
-          // Multiplie la position par la matrice
-          gl_Position = vec4((u_matrice * vec3(a_position, 1)).xy, 0, 1);
-        }
-        </script>
+  </div>
+  <!-- vertex shader -->
+  <script  id="vertex-shader-2d" type="x-shader/x-vertex">
+  attribute vec2 a_position;
+  
+  uniform mat3 u_matrix;
+  
+  void main() {
+    // Multiply the position by the matrix.
+    gl_Position = vec4((u_matrix * vec3(a_position, 1)).xy, 0, 1);
+  }
+  </script>
+  <!-- fragment shader -->
+  <script  id="fragment-shader-2d" type="x-shader/x-fragment">
+  precision mediump float;
+  
+  uniform vec4 u_color;
+  
+  void main() {
+     gl_FragColor = u_color;
+  }
+  </script>
     
     <script src="https://webglfundamentals.org/webgl/resources/jquery-1.7.1.min.js"></script>
     <script src="https://webglfundamentals.org/webgl/resources/jquery-ui-1.8.16.custom.min.js"></script>
