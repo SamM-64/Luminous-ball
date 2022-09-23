@@ -17,9 +17,9 @@ function main() {
 
   // look up where the vertex data needs to go.
   var positionLocation = gl.getAttribLocation(program, "a_position");
+  var colorLocation = gl.getAttribLocation(program, "a_color");
 
   // lookup uniforms
-  var colorLocation = gl.getUniformLocation(program, "u_color");
   var matrixLocation = gl.getUniformLocation(program, "u_matrix");
 
   // Create a buffer to put positions in
@@ -28,6 +28,13 @@ function main() {
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
   // Put geometry data into buffer
   setGeometry(gl);
+
+  // Create a buffer to put colors in
+  var colorBuffer = gl.createBuffer();
+  // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = colorBuffer)
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  // Put geometry data into buffer
+  setColors(gl);
 
   function radToDeg(r) {
     return (r * 180) / Math.PI;
@@ -40,7 +47,6 @@ function main() {
   var translation = [45, 150, 0];
   var rotation = [degToRad(40), degToRad(25), degToRad(325)];
   var scale = [1, 1, 1];
-  var color = [Math.random(), Math.random(), Math.random(), 1];
 
   drawScene();
 
@@ -136,13 +142,13 @@ function main() {
     // Tell it to use our program (pair of shaders)
     gl.useProgram(program);
 
-    // Turn on the attribute
+    // Turn on the position attribute
     gl.enableVertexAttribArray(positionLocation);
 
     // Bind the position buffer.
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+    // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
     var size = 3; // 3 components per iteration
     var type = gl.FLOAT; // the data is 32bit floats
     var normalize = false; // don't normalize the data
@@ -157,8 +163,26 @@ function main() {
       offset
     );
 
-    // set the color
-    gl.uniform4fv(colorLocation, color);
+    // Turn on the color attribute
+    gl.enableVertexAttribArray(colorLocation);
+
+    // Bind the color buffer.
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+
+    // Tell the attribute how to get data out of colorBuffer (ARRAY_BUFFER)
+    var size = 3; // 3 components per iteration
+    var type = gl.UNSIGNED_BYTE; // the data is 8bit unsigned values
+    var normalize = true; // normalize the data (convert from 0-255 to 0-1)
+    var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
+    var offset = 0; // start at the beginning of the buffer
+    gl.vertexAttribPointer(
+      colorLocation,
+      size,
+      type,
+      normalize,
+      stride,
+      offset
+    );
 
     // Compute the matrices
     var matrix = m4.projection(
@@ -366,6 +390,79 @@ function setGeometry(gl) {
 
       // left side
       0, 0, 0, 0, 0, 30, 0, 150, 30, 0, 0, 0, 0, 150, 30, 0, 150, 0,
+    ]),
+    gl.STATIC_DRAW
+  );
+}
+
+// Fill the buffer with colors for the 'F'.
+function setColors(gl) {
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Uint8Array([
+      // left column front
+      200, 70, 120, 200, 70, 120, 200, 70, 120, 200, 70, 120, 200, 70, 120, 200,
+      70, 120,
+
+      // top rung front
+      200, 70, 120, 200, 70, 120, 200, 70, 120, 200, 70, 120, 200, 70, 120, 200,
+      70, 120,
+
+      // middle rung front
+      200, 70, 120, 200, 70, 120, 200, 70, 120, 200, 70, 120, 200, 70, 120, 200,
+      70, 120,
+
+      // left column back
+      80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70,
+      200,
+
+      // top rung back
+      80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70,
+      200,
+
+      // middle rung back
+      80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70, 200, 80, 70,
+      200,
+
+      // top
+      70, 200, 210, 70, 200, 210, 70, 200, 210, 70, 200, 210, 70, 200, 210, 70,
+      200, 210,
+
+      // top rung right
+      200, 200, 70, 200, 200, 70, 200, 200, 70, 200, 200, 70, 200, 200, 70, 200,
+      200, 70,
+
+      // under top rung
+      210, 100, 70, 210, 100, 70, 210, 100, 70, 210, 100, 70, 210, 100, 70, 210,
+      100, 70,
+
+      // between top rung and middle
+      210, 160, 70, 210, 160, 70, 210, 160, 70, 210, 160, 70, 210, 160, 70, 210,
+      160, 70,
+
+      // top of middle rung
+      70, 180, 210, 70, 180, 210, 70, 180, 210, 70, 180, 210, 70, 180, 210, 70,
+      180, 210,
+
+      // right of middle rung
+      100, 70, 210, 100, 70, 210, 100, 70, 210, 100, 70, 210, 100, 70, 210, 100,
+      70, 210,
+
+      // bottom of middle rung.
+      76, 210, 100, 76, 210, 100, 76, 210, 100, 76, 210, 100, 76, 210, 100, 76,
+      210, 100,
+
+      // right of bottom
+      140, 210, 80, 140, 210, 80, 140, 210, 80, 140, 210, 80, 140, 210, 80, 140,
+      210, 80,
+
+      // bottom
+      90, 130, 110, 90, 130, 110, 90, 130, 110, 90, 130, 110, 90, 130, 110, 90,
+      130, 110,
+
+      // left side
+      160, 160, 220, 160, 160, 220, 160, 160, 220, 160, 160, 220, 160, 160, 220,
+      160, 160, 220,
     ]),
     gl.STATIC_DRAW
   );
