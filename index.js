@@ -9,223 +9,160 @@ function main() {
     return;
   }
 
+  var buffers = window.primitives.createSphereBuffers(gl, 10, 48, 24);
+
   // setup GLSL program
   var program = webglUtils.createProgramFromScripts(gl, [
     "vertex-shader-3d",
     "fragment-shader-3d",
   ]);
+  var uniformSetters = webglUtils.createUniformSetters(gl, program);
+  var attribSetters = webglUtils.createAttributeSetters(gl, program);
 
-  // look up where the vertex data needs to go.
-  var positionLocation = gl.getAttribLocation(program, "a_position");
-  var texcoordLocation = gl.getAttribLocation(program, "a_texcoord");
-
-  // lookup uniforms
-  var matrixLocation = gl.getUniformLocation(program, "u_matrix");
-  var textureLocation = gl.getUniformLocation(program, "u_texture");
-
-  // Create a buffer for positions
-  var positionBuffer = gl.createBuffer();
-  // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  // Put the positions in the buffer
-  setGeometry(gl);
-
-  // provide texture coordinates for the rectangle.
-  var texcoordBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-  // Set Texcoords.
-  setTexcoords(gl);
-
-  // Create a texture.
-  var texture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-
-  // fill texture with 3x2 pixels
-  const level = 0;
-  const internalFormat = gl.LUMINANCE;
-  const width = 3;
-  const height = 2;
-  const border = 0;
-  const format = gl.LUMINANCE;
-  const type = gl.UNSIGNED_BYTE;
-  const data = new Uint8Array([128, 64, 128, 0, 192, 0]);
-  const alignment = 1;
-  gl.pixelStorei(gl.UNPACK_ALIGNMENT, alignment);
-  gl.texImage2D(
-    gl.TEXTURE_2D,
-    level,
-    internalFormat,
-    width,
-    height,
-    border,
-    format,
-    type,
-    data
-  );
-
-  // set the filtering so we don't need mips and it's not filtered
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  var attribs = {
+    a_position: { buffer: buffers.position, numComponents: 3 },
+    a_normal: { buffer: buffers.normal, numComponents: 2 },
+    a_texcoord: { buffer: buffers.texcoord, numComponents: 2 },
+  };
 
   function degToRad(d) {
     return (d * Math.PI) / 180;
   }
 
+  var cameraAngleRadians = degToRad(0);
   var fieldOfViewRadians = degToRad(60);
-  var modelXRotationRadians = degToRad(0);
-  var modelYRotationRadians = degToRad(0);
+  var cameraHeight = 50;
 
-  // Get the starting time.
-  var then = 0;
+  var uniformsThatAreTheSameForAllObjects = {
+    u_lightWorldPos: [-50, 40, 100],
+    u_viewInverse: m4.identity(),
+    u_lightColor: [1, 1, 2, 1],
+  };
+
+  var uniformsThatAreComputedForEachObject = {
+    u_worldViewProjection: m4.identity(),
+    u_world: m4.identity(),
+    u_worldInverseTranspose: m4.identity(),
+  };
+
+  var rand = function (min, max) {
+    if (max === undefined) {
+      max = min;
+      min = 0;
+    }
+    return min + Math.random() * (max - min);
+  };
+
+  var randInt = function (range) {
+    return Math.floor(Math.random() * range);
+  };
+
+  var textures = [
+    textureUtils.makeStripeTexture(gl, { color1: "#FFF", color2: "#CCC" }),
+    textureUtils.makeCheckerTexture(gl, { color1: "#1E1E1E", color2: "#CCC" }),
+    textureUtils.makeCircleTexture(gl, { color1: "#FFF", color2: "#CCC" }),
+  ];
+
+  var objects = [];
+  var numObjects = 200;
+  var baseColor = rand(240);
+  for (var ii = 0; ii < numObjects; ++ii) {
+    objects.push({
+      radius: rand(150),
+      xRotation: rand(Math.PI * 2),
+      yRotation: rand(Math.PI),
+      materialUniforms: {
+        u_colorMult: chroma.hsv(rand(baseColor, baseColor + 120), 0.5, 1).gl(),
+        u_diffuse: textures[randInt(textures.length)],
+        u_specular: [1, 1, 1, 1],
+        u_shininess: rand(500),
+        u_specularFactor: rand(1),
+      },
+    });
+  }
 
   requestAnimationFrame(drawScene);
 
   // Draw the scene.
   function drawScene(time) {
-    // convert to seconds
-    time *= 0.001;
-    // Subtract the previous time from the current time
-    var deltaTime = time - then;
-    // Remember the current time for the next frame.
-    then = time;
+    time = time * 0.0001 + 5;
 
     webglUtils.resizeCanvasToDisplaySize(gl.canvas);
 
     // Tell WebGL how to convert from clip space to pixels
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    gl.enable(gl.CULL_FACE);
-    gl.enable(gl.DEPTH_TEST);
-
-    // Animate the rotation
-    modelYRotationRadians += -0.7 * deltaTime;
-    modelXRotationRadians += -0.4 * deltaTime;
-
     // Clear the canvas AND the depth buffer.
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // Tell it to use our program (pair of shaders)
-    gl.useProgram(program);
-
-    // Turn on the position attribute
-    gl.enableVertexAttribArray(positionLocation);
-
-    // Bind the position buffer.
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-    // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-    var size = 3; // 3 components per iteration
-    var type = gl.FLOAT; // the data is 32bit floats
-    var normalize = false; // don't normalize the data
-    var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
-    var offset = 0; // start at the beginning of the buffer
-    gl.vertexAttribPointer(
-      positionLocation,
-      size,
-      type,
-      normalize,
-      stride,
-      offset
-    );
-
-    // Turn on the texcoord attribute
-    gl.enableVertexAttribArray(texcoordLocation);
-
-    // bind the texcoord buffer.
-    gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-
-    // Tell the texcoord attribute how to get data out of texcoordBuffer (ARRAY_BUFFER)
-    var size = 2; // 2 components per iteration
-    var type = gl.FLOAT; // the data is 32bit floats
-    var normalize = false; // don't normalize the data
-    var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
-    var offset = 0; // start at the beginning of the buffer
-    gl.vertexAttribPointer(
-      texcoordLocation,
-      size,
-      type,
-      normalize,
-      stride,
-      offset
-    );
+    gl.enable(gl.CULL_FACE);
+    gl.enable(gl.DEPTH_TEST);
 
     // Compute the projection matrix
     var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     var projectionMatrix = m4.perspective(fieldOfViewRadians, aspect, 1, 2000);
 
-    var cameraPosition = [0, 0, 2];
-    var up = [0, 1, 0];
-    var target = [0, 0, 0];
-
     // Compute the camera's matrix using look at.
-    var cameraMatrix = m4.lookAt(cameraPosition, target, up);
+    var cameraPosition = [0, 0, 100];
+    var target = [0, 0, 0];
+    var up = [0, 1, 0];
+    var cameraMatrix = m4.lookAt(
+      cameraPosition,
+      target,
+      up,
+      uniformsThatAreTheSameForAllObjects.u_viewInverse
+    );
 
     // Make a view matrix from the camera matrix.
     var viewMatrix = m4.inverse(cameraMatrix);
 
     var viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
 
-    var matrix = m4.xRotate(viewProjectionMatrix, modelXRotationRadians);
-    matrix = m4.yRotate(matrix, modelYRotationRadians);
+    gl.useProgram(program);
 
-    // Set the matrix.
-    gl.uniformMatrix4fv(matrixLocation, false, matrix);
+    // Setup all the needed attributes.
+    webglUtils.setAttributes(attribSetters, attribs);
 
-    // Tell the shader to use texture unit 0 for u_texture
-    gl.uniform1i(textureLocation, 0);
+    // Bind the indices.
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
-    // Draw the geometry.
-    gl.drawArrays(gl.TRIANGLES, 0, 6 * 6);
+    // Set the uniforms that are the same for all objects.
+    webglUtils.setUniforms(uniformSetters, uniformsThatAreTheSameForAllObjects);
+
+    // Draw objects
+    objects.forEach(function (object) {
+      // Compute a position for this object based on the time.
+      var worldMatrix = m4.xRotation(object.xRotation * time);
+      worldMatrix = m4.yRotate(worldMatrix, object.yRotation * time);
+      worldMatrix = m4.translate(worldMatrix, 0, 0, object.radius);
+      uniformsThatAreComputedForEachObject.u_world = worldMatrix;
+
+      // Multiply the matrices.
+      m4.multiply(
+        viewProjectionMatrix,
+        worldMatrix,
+        uniformsThatAreComputedForEachObject.u_worldViewProjection
+      );
+      m4.transpose(
+        m4.inverse(worldMatrix),
+        uniformsThatAreComputedForEachObject.u_worldInverseTranspose
+      );
+
+      // Set the uniforms we just computed
+      webglUtils.setUniforms(
+        uniformSetters,
+        uniformsThatAreComputedForEachObject
+      );
+
+      // Set the uniforms that are specific to the this object.
+      webglUtils.setUniforms(uniformSetters, object.materialUniforms);
+
+      // Draw the geometry.
+      gl.drawElements(gl.TRIANGLES, buffers.numElements, gl.UNSIGNED_SHORT, 0);
+    });
 
     requestAnimationFrame(drawScene);
   }
-}
-
-// Fill the buffer with the values that define a cube.
-function setGeometry(gl) {
-  var positions = new Float32Array([
-    -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5,
-    0.5, -0.5, 0.5, -0.5, -0.5,
-
-    -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5,
-    0.5, 0.5, 0.5, 0.5,
-
-    -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5,
-    0.5, 0.5, 0.5, -0.5,
-
-    -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5,
-    -0.5, -0.5, 0.5, -0.5, 0.5,
-
-    -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5,
-    0.5, 0.5, -0.5, 0.5, -0.5,
-
-    0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5,
-    -0.5, 0.5, 0.5, 0.5,
-  ]);
-  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-}
-
-// Fill the buffer with texture coordinates the cube.
-function setTexcoords(gl) {
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array([
-      0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0,
-
-      0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1,
-
-      0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0,
-
-      0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1,
-
-      0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0,
-
-      0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1,
-    ]),
-    gl.STATIC_DRAW
-  );
 }
 
 main();
