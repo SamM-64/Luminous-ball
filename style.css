@@ -1,6 +1,7 @@
 @import url("https://webglfundamentals.org/webgl/resources/webgl-tutorials.css");
 body {
   margin: 0;
+  background-color: black;
   
 }
 canvas {
@@ -9,3 +10,18 @@ canvas {
   display: block;
   background-color: black;
 }
+
+audio{
+    text-align: center;
+   width: 100px;
+    position: fixed;
+    height: 18px;
+    margin-left: auto;
+    right: 1vw;
+    top: 2vh;
+    cursor: pointer;
+    z-index: 10000;
+    
+}
+
+

@@ -8,7 +8,13 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-  <canvas id="canvas"></canvas>
+
+  <audio controls>
+    <source src="./asset/isolated.mp3" type="audio/mp3">
+  </audio>
+  <canvas id="canvas">
+  </canvas>
+  
 <!-- vertex shader -->
 <script  id="vertex-shader-3d" type="x-shader/x-vertex">
 uniform mat4 u_worldViewProjection;
@@ -82,11 +88,20 @@ See https://webglfundamentals.org/webgl/lessons/webgl-boilerplate.html
 and https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
 for webgl-utils, m3, m4, and webgl-lessons-ui.
 -->
+
 <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
 <script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
 <script src="https://webglfundamentals.org/webgl/resources/primitives.js"></script>
 <script src="https://webglfundamentals.org/webgl/resources/texture-utils.js"></script>
 <script src="https://webglfundamentals.org/webgl/resources/chroma.min.js"></script>
   <script src="index.js"></script>
+  <footer>
+    <div class="footer-sound">
+      <span id="bar-1" class="sbar"></span>
+      <span id="bar-2" class="sbar"></span>
+      <span id="bar-3" class="sbar"></span>
+      <span id="bar-4" class="sbar"></span>
+    </div>
+  </footer>
   </body>
 </html>
