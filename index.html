@@ -9,26 +9,21 @@
 </head>
 <body>
   <canvas id="canvas"></canvas>
-<div id="uiContainer">
-  <div id="ui">
-    <div id="cameraAngle"></div>
-  </div>
-</div>
 <!-- vertex shader -->
 <script  id="vertex-shader-3d" type="x-shader/x-vertex">
 attribute vec4 a_position;
-attribute vec4 a_color;
+attribute vec2 a_texcoord;
 
 uniform mat4 u_matrix;
 
-varying vec4 v_color;
+varying vec2 v_texcoord;
 
 void main() {
   // Multiply the position by the matrix.
   gl_Position = u_matrix * a_position;
 
-  // Pass the color to the fragment shader.
-  v_color = a_color;
+  // Pass the texcoord to the fragment shader.
+  v_texcoord = a_texcoord;
 }
 </script>
 <!-- fragment shader -->
@@ -36,27 +31,23 @@ void main() {
 precision mediump float;
 
 // Passed in from the vertex shader.
-varying vec4 v_color;
+varying vec2 v_texcoord;
+
+// The texture.
+uniform sampler2D u_texture;
 
 void main() {
-   gl_FragColor = v_color;
+   gl_FragColor = texture2D(u_texture, v_texcoord);
 }
-</script>
-    
-    <script src="https://webglfundamentals.org/webgl/resources/jquery-1.7.1.min.js"></script>
-    <script src="https://webglfundamentals.org/webgl/resources/jquery-ui-1.8.16.custom.min.js"></script>
-    <script src="https://webglfundamentals.org/webgl/resources/jquery.mousecapture.js"></script>
-    <script src="https://webglfundamentals.org/webgl/resources/jquery.gman.ui.js"></script>
-    <script src="https://webglfundamentals.org/webgl/resources/jquery-gman-circle.js"></script>
-    <!--
-    for most samples webgl-utils only provides shader compiling/linking and
-    canvas resizing because why clutter the examples with code that's the same in every sample.
-    See https://webglfundamentals.org/webgl/lessons/webgl-boilerplate.html
-    and https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-    for webgl-utils, m3, m4, and webgl-lessons-ui.
-    -->
-    <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
-    <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
+</script><!--
+  for most samples webgl-utils only provides shader compiling/linking and
+  canvas resizing because why clutter the examples with code that's the same in every sample.
+  See https://webglfundamentals.org/webgl/lessons/webgl-boilerplate.html
+  and https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+  for webgl-utils, m3, m4, and webgl-lessons-ui.
+  -->
+  <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
   <script src="index.js"></script>
   </body>
 </html>
