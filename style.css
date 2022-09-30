@@ -22,7 +22,7 @@ audio{
     top: 2vh;
     cursor: pointer;
     z-index: 10000;
-    opacity: 0.2;
+    opacity: 0;
 }
 
 
