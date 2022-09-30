@@ -64,7 +64,7 @@ function main() {
   ];
 
   var objects = [];
-  var numObjects = 100;
+  var numObjects = 200;
   var baseColor = rand(240);
   for (var ii = 0; ii < numObjects; ++ii) {
     objects.push({
