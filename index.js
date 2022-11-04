@@ -3,23 +3,23 @@
 function main() {
   // Get A WebGL context
   /** @type {HTMLCanvasElement} */
-  var canvas = document.querySelector("#canvas");
-  var gl = canvas.getContext("webgl");
+  const canvas = document.querySelector("#canvas");
+  const gl = canvas.getContext("webgl");
   if (!gl) {
     return;
   }
 
-  var buffers = window.primitives.createSphereBuffers(gl, 10, 48, 24);
+  const buffers = window.primitives.createSphereBuffers(gl, 10, 48, 24);
 
   // setup GLSL program
-  var program = webglUtils.createProgramFromScripts(gl, [
+  const program = webglUtils.createProgramFromScripts(gl, [
     "vertex-shader-3d",
     "fragment-shader-3d",
   ]);
-  var uniformSetters = webglUtils.createUniformSetters(gl, program);
-  var attribSetters = webglUtils.createAttributeSetters(gl, program);
+  const uniformSetters = webglUtils.createUniformSetters(gl, program);
+  const attribSetters = webglUtils.createAttributeSetters(gl, program);
 
-  var attribs = {
+  const attribs = {
     a_position: { buffer: buffers.position, numComponents: 3 },
     a_normal: { buffer: buffers.normal, numComponents: 2 },
     a_texcoord: { buffer: buffers.texcoord, numComponents: 2 },
@@ -29,23 +29,23 @@ function main() {
     return (d * Math.PI) / 180;
   }
 
-  var cameraAngleRadians = degToRad(0);
-  var fieldOfViewRadians = degToRad(60);
-  var cameraHeight = 50;
+  const cameraAngleRadians = degToRad(0);
+  const fieldOfViewRadians = degToRad(60);
+  const cameraHeight = 50;
 
-  var uniformsThatAreTheSameForAllObjects = {
+  const uniformsThatAreTheSameForAllObjects = {
     u_lightWorldPos: [-50, 40, 100],
     u_viewInverse: m4.identity(),
     u_lightColor: [1, 1, 2, 1],
   };
 
-  var uniformsThatAreComputedForEachObject = {
+  const uniformsThatAreComputedForEachObject = {
     u_worldViewProjection: m4.identity(),
     u_world: m4.identity(),
     u_worldInverseTranspose: m4.identity(),
   };
 
-  var rand = function (min, max) {
+  const rand = function (min, max) {
     if (max === undefined) {
       max = min;
       min = 0;
@@ -53,19 +53,19 @@ function main() {
     return min + Math.random() * (max - min);
   };
 
-  var randInt = function (range) {
+  const randInt = function (range) {
     return Math.floor(Math.random() * range);
   };
 
-  var textures = [
+  const textures = [
     textureUtils.makeStripeTexture(gl, { color1: "#FFF", color2: "#CCC" }),
     textureUtils.makeCheckerTexture(gl, { color1: "#1E1E1E", color2: "#CCC" }),
     textureUtils.makeCircleTexture(gl, { color1: "#FFF", color2: "#CCC" }),
   ];
 
-  var objects = [];
-  var numObjects = 200;
-  var baseColor = rand(240);
+  const objects = [];
+  const numObjects = 200;
+  const baseColor = rand(240);
   for (var ii = 0; ii < numObjects; ++ii) {
     objects.push({
       radius: rand(150),
@@ -99,14 +99,19 @@ function main() {
     gl.enable(gl.DEPTH_TEST);
 
     // Compute the projection matrix
-    var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    var projectionMatrix = m4.perspective(fieldOfViewRadians, aspect, 1, 2000);
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const projectionMatrix = m4.perspective(
+      fieldOfViewRadians,
+      aspect,
+      1,
+      2000
+    );
 
     // Compute the camera's matrix using look at.
-    var cameraPosition = [0, 0, 100];
-    var target = [0, 0, 0];
-    var up = [0, 1, 0];
-    var cameraMatrix = m4.lookAt(
+    const cameraPosition = [0, 0, 100];
+    const target = [0, 0, 0];
+    const up = [0, 1, 0];
+    const cameraMatrix = m4.lookAt(
       cameraPosition,
       target,
       up,
@@ -114,9 +119,9 @@ function main() {
     );
 
     // Make a view matrix from the camera matrix.
-    var viewMatrix = m4.inverse(cameraMatrix);
+    const viewMatrix = m4.inverse(cameraMatrix);
 
-    var viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
+    const viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
 
     gl.useProgram(program);
 
@@ -132,7 +137,7 @@ function main() {
     // Draw objects
     objects.forEach(function (object) {
       // Compute a position for this object based on the time.
-      var worldMatrix = m4.xRotation(object.xRotation * time);
+      let worldMatrix = m4.xRotation(object.xRotation * time);
       worldMatrix = m4.yRotate(worldMatrix, object.yRotation * time);
       worldMatrix = m4.translate(worldMatrix, 0, 0, object.radius);
       uniformsThatAreComputedForEachObject.u_world = worldMatrix;
