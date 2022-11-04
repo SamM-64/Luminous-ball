@@ -1,11 +1,10 @@
 {
   "dependencies": {
-    "jquery": "^3.6.1",
     "node": "^18.10.0",
     "sass": "^1.55.0",
     "vite": "^3.2.2"
   },
-  "name": "webgl-tuto",
+  "name": "luminous-ball",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -16,13 +15,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SamM-64/WebGL-tuto.git"
+    "url": "git+https://github.com/SamM-64/Luminous-ball.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/SamM-64/WebGL-tuto/issues"
+    "url": "https://github.com/SamM-64/Luminous-ball/issues"
   },
-  "homepage": "https://github.com/SamM-64/WebGL-tuto#readme",
+  "homepage": "https://github.com/SamM-64/Luminous-ball#readme",
   "description": ""
 }
